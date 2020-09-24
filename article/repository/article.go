@@ -1,4 +1,4 @@
-package mysql
+package repository
 
 import (
 	"context"
@@ -9,7 +9,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/bxcodec/go-clean-arch/article/repository"
 	"github.com/bxcodec/go-clean-arch/domain"
 )
 
@@ -67,7 +66,7 @@ func (m *mysqlArticleRepository) Fetch(ctx context.Context, cursor string, num i
 	query := `SELECT ar.id,ar.title,ar.content, ar.author_id, ar.created_at, ar.updated_at, a.name, a.created_at, a.updated_at
   						FROM article ar JOIN author a ON a.id = ar.author_id WHERE created_at > ? ORDER BY created_at LIMIT ? `
 
-	decodedCursor, err := repository.DecodeCursor(cursor)
+	decodedCursor, err := DecodeCursor(cursor)
 	if err != nil && cursor != "" {
 		return nil, "", domain.ErrBadParamInput
 	}
@@ -78,7 +77,7 @@ func (m *mysqlArticleRepository) Fetch(ctx context.Context, cursor string, num i
 	}
 
 	if len(res) == int(num) {
-		nextCursor = repository.EncodeCursor(res[len(res)-1].CreatedAt)
+		nextCursor = EncodeCursor(res[len(res)-1].CreatedAt)
 	}
 
 	return

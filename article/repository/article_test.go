@@ -1,7 +1,8 @@
-package mysql_test
+package repository_test
 
 import (
 	"context"
+	"github.com/bxcodec/go-clean-arch/article/repository"
 	"github.com/bxcodec/go-clean-arch/domain/article"
 	"github.com/bxcodec/go-clean-arch/domain/author"
 	"testing"
@@ -9,9 +10,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
-
-	"github.com/bxcodec/go-clean-arch/article/repository"
-	articleMysqlRepo "github.com/bxcodec/go-clean-arch/article/repository/mysql"
 )
 
 func TestFetch(t *testing.T) {
@@ -42,7 +40,7 @@ func TestFetch(t *testing.T) {
 	query := "SELECT ar.id,ar.title,ar.content, ar.author_id, ar.created_at, ar.updated_at, a.name, a.created_at, a.updated_at FROM article ar JOIN author a ON a.id = ar.author_id WHERE created_at > \\? ORDER BY created_at LIMIT \\?"
 
 	mock.ExpectQuery(query).WillReturnRows(rows)
-	a := articleMysqlRepo.NewMysqlArticleRepository(db)
+	a := repository.NewMysqlArticleRepository(db)
 	cursor := repository.EncodeCursor(mockArticles[1].CreatedAt)
 	num := int64(2)
 	list, nextCursor, err := a.Fetch(context.TODO(), cursor, num)
@@ -63,7 +61,7 @@ func TestGetByID(t *testing.T) {
 	query := "SELECT ar.id,ar.title,ar.content, ar.author_id, ar.created_at, ar.updated_at, a.name, a.created_at, a.updated_at FROM article ar JOIN author a ON a.id = ar.author_id WHERE ID = \\?"
 
 	mock.ExpectQuery(query).WillReturnRows(rows)
-	a := articleMysqlRepo.NewMysqlArticleRepository(db)
+	a := repository.NewMysqlArticleRepository(db)
 
 	num := int64(1)
 	anArticle, err := a.GetByID(context.TODO(), num)
@@ -92,7 +90,7 @@ func TestStore(t *testing.T) {
 	prep := mock.ExpectPrepare(query)
 	prep.ExpectExec().WithArgs(ar.Title, ar.Content, ar.Author.ID, ar.CreatedAt, ar.UpdatedAt).WillReturnResult(sqlmock.NewResult(12, 1))
 
-	a := articleMysqlRepo.NewMysqlArticleRepository(db)
+	a := repository.NewMysqlArticleRepository(db)
 
 	err = a.Store(context.TODO(), ar)
 	assert.NoError(t, err)
@@ -111,7 +109,7 @@ func TestGetByTitle(t *testing.T) {
 	query := "SELECT ar.id,ar.title,ar.content, ar.author_id, ar.created_at, ar.updated_at, a.name, a.created_at, a.updated_at FROM article ar JOIN author a on a.id = ar.author_id WHERE title = \\?"
 
 	mock.ExpectQuery(query).WillReturnRows(rows)
-	a := articleMysqlRepo.NewMysqlArticleRepository(db)
+	a := repository.NewMysqlArticleRepository(db)
 
 	title := "title 1"
 	anArticle, err := a.GetByTitle(context.TODO(), title)
@@ -130,7 +128,7 @@ func TestDelete(t *testing.T) {
 	prep := mock.ExpectPrepare(query)
 	prep.ExpectExec().WithArgs(12).WillReturnResult(sqlmock.NewResult(12, 1))
 
-	a := articleMysqlRepo.NewMysqlArticleRepository(db)
+	a := repository.NewMysqlArticleRepository(db)
 
 	num := int64(12)
 	err = a.Delete(context.TODO(), num)
@@ -161,7 +159,7 @@ func TestUpdate(t *testing.T) {
 	prep := mock.ExpectPrepare(query)
 	prep.ExpectExec().WithArgs(ar.Title, ar.Content, ar.Author.ID, ar.UpdatedAt, ar.ID).WillReturnResult(sqlmock.NewResult(12, 1))
 
-	a := articleMysqlRepo.NewMysqlArticleRepository(db)
+	a := repository.NewMysqlArticleRepository(db)
 
 	err = a.Update(context.TODO(), ar)
 	assert.NoError(t, err)
