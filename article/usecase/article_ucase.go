@@ -94,10 +94,6 @@ func (a *articleUsecase) Fetch(c context.Context, cursor string, num int64) (res
 		return nil, "", err
 	}
 
-	res, err = a.fillAuthorDetails(ctx, res)
-	if err != nil {
-		nextCursor = ""
-	}
 	return
 }
 
@@ -110,11 +106,6 @@ func (a *articleUsecase) GetByID(c context.Context, id int64) (res domain.Articl
 		return
 	}
 
-	resAuthor, err := a.authorRepo.GetByID(ctx, res.Author.ID)
-	if err != nil {
-		return domain.Article{}, err
-	}
-	res.Author = resAuthor
 	return
 }
 
@@ -134,12 +125,6 @@ func (a *articleUsecase) GetByTitle(c context.Context, title string) (res domain
 		return
 	}
 
-	resAuthor, err := a.authorRepo.GetByID(ctx, res.Author.ID)
-	if err != nil {
-		return domain.Article{}, err
-	}
-
-	res.Author = resAuthor
 	return
 }
 

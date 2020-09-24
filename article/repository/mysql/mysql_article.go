@@ -37,23 +37,24 @@ func (m *mysqlArticleRepository) fetch(ctx context.Context, query string, args .
 	result = make([]domain.Article, 0)
 	for rows.Next() {
 		t := domain.Article{}
-		authorID := int64(0)
+		author := domain.Author{}
 		err = rows.Scan(
 			&t.ID,
 			&t.Title,
 			&t.Content,
-			&authorID,
+			&author.ID,
 			&t.UpdatedAt,
 			&t.CreatedAt,
+			&author.Name,
+			&author.CreatedAt,
+			&author.UpdatedAt,
 		)
 
 		if err != nil {
 			logrus.Error(err)
 			return nil, err
 		}
-		t.Author = domain.Author{
-			ID: authorID,
-		}
+		t.Author = author
 		result = append(result, t)
 	}
 
@@ -61,8 +62,8 @@ func (m *mysqlArticleRepository) fetch(ctx context.Context, query string, args .
 }
 
 func (m *mysqlArticleRepository) Fetch(ctx context.Context, cursor string, num int64) (res []domain.Article, nextCursor string, err error) {
-	query := `SELECT id,title,content, author_id, updated_at, created_at
-  						FROM article WHERE created_at > ? ORDER BY created_at LIMIT ? `
+	query := `SELECT ar.id,ar.title,ar.content, ar.author_id, ar.updated_at, ar.created_at, a.name, a.created_at, a.updated_at
+  						FROM article ar JOIN author a ON a.id = ar.author_id WHERE created_at > ? ORDER BY created_at LIMIT ? `
 
 	decodedCursor, err := repository.DecodeCursor(cursor)
 	if err != nil && cursor != "" {
@@ -81,8 +82,8 @@ func (m *mysqlArticleRepository) Fetch(ctx context.Context, cursor string, num i
 	return
 }
 func (m *mysqlArticleRepository) GetByID(ctx context.Context, id int64) (res domain.Article, err error) {
-	query := `SELECT id,title,content, author_id, updated_at, created_at
-  						FROM article WHERE ID = ?`
+	query := `SELECT ar.id,ar.title,ar.content, ar.author_id, ar.created_at, ar.updated_at, a.name, a.created_at, a.updated_at
+  						FROM article ar JOIN author a ON a.id = ar.author_id WHERE ID = ?`
 
 	list, err := m.fetch(ctx, query, id)
 	if err != nil {
@@ -99,8 +100,8 @@ func (m *mysqlArticleRepository) GetByID(ctx context.Context, id int64) (res dom
 }
 
 func (m *mysqlArticleRepository) GetByTitle(ctx context.Context, title string) (res domain.Article, err error) {
-	query := `SELECT id,title,content, author_id, updated_at, created_at
-  						FROM article WHERE title = ?`
+	query := `SELECT ar.id,ar.title,ar.content, ar.author_id, ar.created_at, ar.updated_at, a.name, a.created_at, a.updated_at
+  						FROM article ar JOIN author a on a.id = ar.author_id WHERE title = ?`
 
 	list, err := m.fetch(ctx, query, title)
 	if err != nil {

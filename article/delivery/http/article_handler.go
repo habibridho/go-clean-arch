@@ -39,6 +39,15 @@ func (a *ArticleHandler) FetchArticle(c echo.Context) error {
 	cursor := c.QueryParam("cursor")
 	ctx := c.Request().Context()
 
+	title := c.QueryParam("title")
+	if title != "" {
+		listAr, err := a.AUsecase.GetByTitle(ctx, title)
+		if err != nil {
+			return c.JSON(getStatusCode(err), ResponseError{Message: err.Error()})
+		}
+		return c.JSON(http.StatusOK, listAr)
+	}
+
 	listAr, nextCursor, err := a.AUsecase.Fetch(ctx, cursor, int64(num))
 	if err != nil {
 		return c.JSON(getStatusCode(err), ResponseError{Message: err.Error()})
