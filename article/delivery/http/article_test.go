@@ -2,6 +2,7 @@ package http_test
 
 import (
 	"encoding/json"
+	"github.com/bxcodec/go-clean-arch/domain/article"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -21,11 +22,11 @@ import (
 )
 
 func TestFetch(t *testing.T) {
-	var mockArticle domain.Article
+	var mockArticle article.Article
 	err := faker.FakeData(&mockArticle)
 	assert.NoError(t, err)
 	mockUCase := new(mocks.ArticleUsecase)
-	mockListArticle := make([]domain.Article, 0)
+	mockListArticle := make([]article.Article, 0)
 	mockListArticle = append(mockListArticle, mockArticle)
 	num := 1
 	cursor := "2"
@@ -74,7 +75,7 @@ func TestFetchError(t *testing.T) {
 }
 
 func TestGetByID(t *testing.T) {
-	var mockArticle domain.Article
+	var mockArticle article.Article
 	err := faker.FakeData(&mockArticle)
 	assert.NoError(t, err)
 
@@ -104,7 +105,7 @@ func TestGetByID(t *testing.T) {
 }
 
 func TestStore(t *testing.T) {
-	mockArticle := domain.Article{
+	mockArticle := article.Article{
 		Title:     "Title",
 		Content:   "Content",
 		CreatedAt: time.Now(),
@@ -118,7 +119,7 @@ func TestStore(t *testing.T) {
 	j, err := json.Marshal(tempMockArticle)
 	assert.NoError(t, err)
 
-	mockUCase.On("Store", mock.Anything, mock.AnythingOfType("*domain.Article")).Return(nil)
+	mockUCase.On("Store", mock.Anything, mock.AnythingOfType("*article.Article")).Return(nil)
 
 	e := echo.New()
 	req, err := http.NewRequest(echo.POST, "/article", strings.NewReader(string(j)))
@@ -140,7 +141,7 @@ func TestStore(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-	var mockArticle domain.Article
+	var mockArticle article.Article
 	err := faker.FakeData(&mockArticle)
 	assert.NoError(t, err)
 

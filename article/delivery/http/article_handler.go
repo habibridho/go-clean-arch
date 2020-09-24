@@ -1,6 +1,7 @@
 package http
 
 import (
+	"github.com/bxcodec/go-clean-arch/domain/article"
 	"net/http"
 	"strconv"
 
@@ -18,11 +19,11 @@ type ResponseError struct {
 
 // ArticleHandler  represent the httphandler for article
 type ArticleHandler struct {
-	AUsecase domain.ArticleUsecase
+	AUsecase article.ArticleUsecase
 }
 
 // NewArticleHandler will initialize the articles/ resources endpoint
-func NewArticleHandler(e *echo.Echo, us domain.ArticleUsecase) {
+func NewArticleHandler(e *echo.Echo, us article.ArticleUsecase) {
 	handler := &ArticleHandler{
 		AUsecase: us,
 	}
@@ -75,7 +76,7 @@ func (a *ArticleHandler) GetByID(c echo.Context) error {
 	return c.JSON(http.StatusOK, art)
 }
 
-func isRequestValid(m *domain.Article) (bool, error) {
+func isRequestValid(m *article.Article) (bool, error) {
 	validate := validator.New()
 	err := validate.Struct(m)
 	if err != nil {
@@ -86,7 +87,7 @@ func isRequestValid(m *domain.Article) (bool, error) {
 
 // Store will store the article by given request body
 func (a *ArticleHandler) Store(c echo.Context) (err error) {
-	var article domain.Article
+	var article article.Article
 	err = c.Bind(&article)
 	if err != nil {
 		return c.JSON(http.StatusUnprocessableEntity, err.Error())

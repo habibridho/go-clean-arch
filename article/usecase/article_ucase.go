@@ -2,22 +2,21 @@ package usecase
 
 import (
 	"context"
+	"github.com/bxcodec/go-clean-arch/domain/article"
+	"github.com/bxcodec/go-clean-arch/domain/author"
 	"time"
-
-	"github.com/sirupsen/logrus"
-	"golang.org/x/sync/errgroup"
 
 	"github.com/bxcodec/go-clean-arch/domain"
 )
 
 type articleUsecase struct {
-	articleRepo    domain.ArticleRepository
-	authorRepo     domain.AuthorRepository
+	articleRepo    article.ArticleRepository
+	authorRepo     author.AuthorRepository
 	contextTimeout time.Duration
 }
 
 // NewArticleUsecase will create new an articleUsecase object representation of domain.ArticleUsecase interface
-func NewArticleUsecase(a domain.ArticleRepository, ar domain.AuthorRepository, timeout time.Duration) domain.ArticleUsecase {
+func NewArticleUsecase(a article.ArticleRepository, ar author.AuthorRepository, timeout time.Duration) article.ArticleUsecase {
 	return &articleUsecase{
 		articleRepo:    a,
 		authorRepo:     ar,
@@ -25,63 +24,7 @@ func NewArticleUsecase(a domain.ArticleRepository, ar domain.AuthorRepository, t
 	}
 }
 
-/*
-* In this function below, I'm using errgroup with the pipeline pattern
-* Look how this works in this package explanation
-* in godoc: https://godoc.org/golang.org/x/sync/errgroup#ex-Group--Pipeline
- */
-func (a *articleUsecase) fillAuthorDetails(c context.Context, data []domain.Article) ([]domain.Article, error) {
-	g, ctx := errgroup.WithContext(c)
-
-	// Get the author's id
-	mapAuthors := map[int64]domain.Author{}
-
-	for _, article := range data {
-		mapAuthors[article.Author.ID] = domain.Author{}
-	}
-	// Using goroutine to fetch the author's detail
-	chanAuthor := make(chan domain.Author)
-	for authorID := range mapAuthors {
-		authorID := authorID
-		g.Go(func() error {
-			res, err := a.authorRepo.GetByID(ctx, authorID)
-			if err != nil {
-				return err
-			}
-			chanAuthor <- res
-			return nil
-		})
-	}
-
-	go func() {
-		err := g.Wait()
-		if err != nil {
-			logrus.Error(err)
-			return
-		}
-		close(chanAuthor)
-	}()
-
-	for author := range chanAuthor {
-		if author != (domain.Author{}) {
-			mapAuthors[author.ID] = author
-		}
-	}
-
-	if err := g.Wait(); err != nil {
-		return nil, err
-	}
-
-	// merge the author's data
-	for index, item := range data {
-		if a, ok := mapAuthors[item.Author.ID]; ok {
-			data[index].Author = a
-		}
-	}
-	return data, nil
-}
-
-func (a *articleUsecase) Fetch(c context.Context, cursor string, num int64) (res []domain.Article, nextCursor string, err error) {
+func (a *articleUsecase) Fetch(c context.Context, cursor string, num int64) (res []article.Article, nextCursor string, err error) {
 	if num == 0 {
 		num = 10
 	}
@@ -97,7 +40,7 @@ func (a *articleUsecase) Fetch(c context.Context, cursor string, num int64) (res
 	return
 }
 
-func (a *articleUsecase) GetByID(c context.Context, id int64) (res domain.Article, err error) {
+func (a *articleUsecase) GetByID(c context.Context, id int64) (res article.Article, err error) {
 	ctx, cancel := context.WithTimeout(c, a.contextTimeout)
 	defer cancel()
 
@@ -109,7 +52,7 @@ func (a *articleUsecase) GetByID(c context.Context, id int64) (res domain.Articl
 	return
 }
 
-func (a *articleUsecase) Update(c context.Context, ar *domain.Article) (err error) {
+func (a *articleUsecase) Update(c context.Context, ar *article.Article) (err error) {
 	ctx, cancel := context.WithTimeout(c, a.contextTimeout)
 	defer cancel()
 
@@ -117,7 +60,7 @@ func (a *articleUsecase) Update(c context.Context, ar *domain.Article) (err erro
 	return a.articleRepo.Update(ctx, ar)
 }
 
-func (a *articleUsecase) GetByTitle(c context.Context, title string) (res domain.Article, err error) {
+func (a *articleUsecase) GetByTitle(c context.Context, title string) (res article.Article, err error) {
 	ctx, cancel := context.WithTimeout(c, a.contextTimeout)
 	defer cancel()
 	res, err = a.articleRepo.GetByTitle(ctx, title)
@@ -128,11 +71,11 @@ func (a *articleUsecase) GetByTitle(c context.Context, title string) (res domain
 	return
 }
 
-func (a *articleUsecase) Store(c context.Context, m *domain.Article) (err error) {
+func (a *articleUsecase) Store(c context.Context, m *article.Article) (err error) {
 	ctx, cancel := context.WithTimeout(c, a.contextTimeout)
 	defer cancel()
 	existedArticle, _ := a.GetByTitle(ctx, m.Title)
-	if existedArticle != (domain.Article{}) {
+	if existedArticle != (article.Article{}) {
 		return domain.ErrConflict
 	}
 
@@ -147,7 +90,7 @@ func (a *articleUsecase) Delete(c context.Context, id int64) (err error) {
 	if err != nil {
 		return
 	}
-	if existedArticle == (domain.Article{}) {
+	if existedArticle == (article.Article{}) {
 		return domain.ErrNotFound
 	}
 	return a.articleRepo.Delete(ctx, id)

@@ -1,4 +1,4 @@
-package domain
+package author
 
 import "context"
 

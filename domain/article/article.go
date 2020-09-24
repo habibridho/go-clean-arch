@@ -1,18 +1,19 @@
-package domain
+package article
 
 import (
 	"context"
+	"github.com/bxcodec/go-clean-arch/domain/author"
 	"time"
 )
 
 // Article ...
 type Article struct {
-	ID        int64     `json:"id"`
-	Title     string    `json:"title" validate:"required"`
-	Content   string    `json:"content" validate:"required"`
-	Author    Author    `json:"author"`
-	UpdatedAt time.Time `json:"updated_at"`
-	CreatedAt time.Time `json:"created_at"`
+	ID        int64         `json:"id"`
+	Title     string        `json:"title" validate:"required"`
+	Content   string        `json:"content" validate:"required"`
+	Author    author.Author `json:"author"`
+	UpdatedAt time.Time     `json:"updated_at"`
+	CreatedAt time.Time     `json:"created_at"`
 }
 
 // ArticleUsecase represent the article's usecases
